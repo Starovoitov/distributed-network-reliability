@@ -11,8 +11,13 @@ class GraphException(igraph.InternalError):
 
 
 class Graph:
-
-    def __init__(self, vertices: int, edges: int, initial_vertex_index: int = 0, final_vertex_index: int = -1):
+    def __init__(
+        self,
+        vertices: int,
+        edges: int,
+        initial_vertex_index: int = 0,
+        final_vertex_index: int = -1,
+    ):
         self.graph_object = igraph.Graph()
         self.initial_vertex_index = initial_vertex_index
         self.final_vertex_index = final_vertex_index
@@ -32,7 +37,9 @@ class Graph:
 
     @property
     def shortest_path(self) -> List:
-        return self.graph_object.get_shortest_paths(v=self.initial_vertex_index, to=self.graph_object.vs.indices[-1])
+        return self.graph_object.get_shortest_paths(
+            v=self.initial_vertex_index, to=self.graph_object.vs.indices[-1]
+        )
 
     def get_edge_weights(self, edge: Tuple[int, int]) -> List[float]:
         return [e[edge] for e in self.edge_weights if edge in e]
@@ -41,8 +48,7 @@ class Graph:
         if self.graph_object.get_edgelist():
             raise GraphException("Graph already exists")
         self.graph_object.add_vertices(self.vertices)
-        v_paires = [(self.__get_random_vertex(), self.__get_random_vertex()) for e in range(self.edges_number)]
-        self.graph_object.add_edges(v_paires)
+        self._generate_random_edges(self.edges_number)
 
     def plot_graph(self) -> None:
         layout = self.graph_object.layout_kamada_kawai()
@@ -51,5 +57,23 @@ class Graph:
     def set_edge_weights(self) -> None:
         self.edge_weights = [{e: random.random()} for e in self.edges]
 
-    def __get_random_vertex(self) -> Tuple[int, int]:
+    def _get_random_vertex(self) -> Tuple[int, int]:
         return random.randint(0, self.vertices - 1)
+
+    def _generate_random_edges(self, number_of_edges) -> None:
+        v_paires = [
+            (self._get_random_vertex(), self._get_random_vertex())
+            for e in range(number_of_edges)
+        ]
+        self.graph_object.add_edges(v_paires)
+
+
+class ConnectedGraph(Graph):
+    def generate_graph(self) -> None:
+        if self.edges_number < self.vertices:
+            raise GraphException(
+                "Can't generate connected graph if number of edges is lesser than number of vertices"
+            )
+        self.graph_object = self.graph_object.Ring(n=self.vertices, circular=False)
+        edges_to_add = self.edges_number - self.graph_object.ecount()
+        self._generate_random_edges(edges_to_add)
