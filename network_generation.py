@@ -26,6 +26,7 @@ class Graph:
         self.edge_weights = []
         self.generate_graph()
         self.set_edge_weights()
+        self.graph_object.to_directed(False)
 
     @property
     def edges(self) -> List[Tuple[int, int]]:
@@ -51,8 +52,8 @@ class Graph:
         self._generate_random_edges(self.edges_number)
 
     def plot_graph(self) -> None:
-        layout = self.graph_object.layout_kamada_kawai()
-        plot(self.graph_object, layout=layout)
+        self.graph_object.vs["label"] = self.graph_object.vs.indices
+        plot(self.graph_object, margin=(30, 30, 30, 30))
 
     def set_edge_weights(self) -> None:
         self.edge_weights = [{e: random.random()} for e in self.edges]
