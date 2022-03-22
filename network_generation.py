@@ -17,6 +17,8 @@ class Graph:
         edges: int,
         initial_vertex_index: int = 0,
         final_vertex_index: int = -1,
+        is_directed=True,
+        is_simple=True,
     ):
         self.graph_object = igraph.Graph()
         self.initial_vertex_index = initial_vertex_index
@@ -26,7 +28,11 @@ class Graph:
         self.edge_weights = []
         self.generate_graph()
         self.set_edge_weights()
-        self.graph_object.to_directed(False)
+        self.__disabled_vertices = {}
+        if is_directed:
+            self.graph_object.to_directed(False)
+        if is_simple:
+            self.graph_object.simplify()
 
     @property
     def edges(self) -> List[Tuple[int, int]]:
@@ -45,7 +51,10 @@ class Graph:
     @property
     def incidence_dict(self) -> Dict[int, List[Tuple[int, int]]]:
         incidence_list = self.graph_object.get_inclist()
-        return {v: [self.edges[e] for e in incidence_list[v]] for v, inc in enumerate(incidence_list)}
+        return {
+            v: [self.edges[e] for e in incidence_list[v]]
+            for v, inc in enumerate(incidence_list)
+        }
 
     def get_edge_weights(self, edge: Tuple[int, int]) -> List[float]:
         return [e[edge] for e in self.edge_weights if edge in e]
@@ -72,6 +81,29 @@ class Graph:
             for e in range(number_of_edges)
         ]
         self.graph_object.add_edges(v_paires)
+
+    def __copy__(self):
+        new_copy = type(self)(
+            vertices=self.vertices,
+            edges=self.edges_number,
+            initial_vertex_index=self.initial_vertex_index,
+            final_vertex_index=self.final_vertex_index,
+        )
+        new_copy.__dict__.update(self.__dict__)
+        return new_copy
+
+    def disable_vertice(self, vertice: int) -> None:
+        self.__disabled_vertices[vertice] = self.incidence_dict[vertice]
+        self.graph_object.delete_edges(self.__disabled_vertices[vertice])
+        del self.incidence_dict[vertice]
+
+    def enable_vertice(self, vertice: int) -> None:
+        self.incidence_dict[vertice] = self.__disabled_vertices[vertice]
+        self.graph_object.add_edges(self.__disabled_vertices[vertice])
+        del self.__disabled_vertices[vertice]
+
+    def is_vertice_enabled(self, vertice: int) -> None:
+        return vertice not in self.__disabled_vertices
 
 
 class ConnectedGraph(Graph):
