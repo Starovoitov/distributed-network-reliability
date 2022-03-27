@@ -131,36 +131,3 @@ class ConnectedGraph(Graph):
         return self.graph_object.get_all_shortest_paths(
             v=self.initial_vertex_index, to=self.graph_object.vs.indices[-1]
         )
-
-    def get_all_min_workable_paths(self):
-        #  As per definition of min path as "min path is a min set of workable elements ensuring system functioning"
-        return self.find_all_paths(0, self.vertices - 1)
-
-    def get_all_min_non_workable_cuts(self) -> List[List[Tuple[int, int]]]:
-        # As per definition of min cut as "min cut is a min set of non-workable elements ensuring system failure while
-        # restoring of any of them leads to restoring of system functioning"
-        trees_built = [[0]]
-        self.__find_new_trees(trees_built)
-        sections = sorted([self.incidence_dict[tree[-1]] for tree in trees_built])
-        not_min_sections = []
-        for section in sorted(sections, key=len):
-            if not section:
-                continue
-            rest_sections = sections.copy()
-            rest_sections.remove(section)
-            including_sections = [r for r in rest_sections if section in r]
-            not_min_sections.extend(including_sections)
-        return [s for s in sections if s and s not in not_min_sections]
-
-    def __find_new_trees(self, constructed_trees: List[List[int]]) -> None:
-        cursor_tree = constructed_trees[-1]
-        cursor_vertex = cursor_tree[-1]
-        if cursor_vertex == self.vertices - 1:
-            return
-        neighbours = [sorted(e)[1] for e in self.edges if cursor_vertex in e]
-        for n in neighbours:
-            if n == cursor_vertex:
-                continue
-            current_tree = cursor_tree + [n]
-            constructed_trees.append(current_tree)
-        self.__find_new_trees(constructed_trees)
