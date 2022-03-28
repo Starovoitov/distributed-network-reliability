@@ -13,20 +13,38 @@ class GraphException(igraph.InternalError):
 class Graph:
     def __init__(
         self,
-        vertices: int,
-        edges: int,
+        vertices: int = None,
+        edges: int = None,
         initial_vertex_index: int = 0,
         final_vertex_index: int = -1,
         is_directed=True,
         is_simple=True,
+        filename: str = None,
     ):
-        self.graph_object = igraph.Graph()
         self.initial_vertex_index = initial_vertex_index
         self.final_vertex_index = final_vertex_index
-        self.vertices = vertices
-        self.edges_number = edges
+        self.graph_object = igraph.Graph()
+        if filename:
+            self.graph_object = self.load_graph(filename)
+            self.vertices = self.graph_object.vcount()
+            self.edges_number = self.graph_object.ecount()
+        else:
+            if not vertices or not edges:
+                raise GraphException(
+                    f"Vertices and edges numbers should be specified if graph is generated"
+                )
+            self.vertices = vertices
+            self.edges_number = edges
+            self.generate_graph()
+        if (
+            self.vertices < self.initial_vertex_index
+            or self.vertices < self.final_vertex_index
+        ):
+            raise GraphException(
+                f"Incorrect vertex indexes passed in argument list "
+                f"for the graph loaded from file{filename} "
+            )
         self.edge_weights = []
-        self.generate_graph()
         self.set_edge_weights()
         self.__disabled_vertices = {}
         if is_directed:
@@ -115,6 +133,12 @@ class Graph:
         for node in set(self.graph_object.neighbors(start_vertex)) - set(cursor_path):
             all_paths.extend(self.find_all_paths(node, end_vertex, cursor_path))
         return all_paths
+
+    def load_graph(self, filename: str) -> igraph.Graph:
+        return self.graph_object.Read_GraphML(filename)
+
+    def save_graph(self, filename: str) -> None:
+        self.graph_object.write_graphml(filename)
 
 
 class ConnectedGraph(Graph):

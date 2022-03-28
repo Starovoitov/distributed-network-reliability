@@ -14,8 +14,12 @@ class StructuralFunction:
             self.vertices_values = vertices_values
         else:
             self.vertices_values = get_random_struct_values(self.graph.vertices)
-        self.min_paths_structural_function_value = self.calculate_structural_function_min_paths()
-        self.min_cuts_structural_function_value = self.calculate_structural_function_min_cuts()
+        self.min_paths_structural_function_value = (
+            self.calculate_structural_function_min_paths()
+        )
+        self.min_cuts_structural_function_value = (
+            self.calculate_structural_function_min_cuts()
+        )
 
     def get_all_min_workable_paths(self) -> List[List[int]]:
         #  As per definition of min path as "min path is a min set of workable elements ensuring system functioning"
