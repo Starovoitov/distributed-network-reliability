@@ -5,6 +5,10 @@ from network_generation import Graph
 from utils import multiple_values_in_list, get_random_struct_values
 
 
+class StructuralFunctionError(ValueError):
+    pass
+
+
 class StructuralFunction:
     def __init__(self, g: Graph, vertices_values: List[bool] = None):
         self.graph = g
@@ -40,6 +44,19 @@ class StructuralFunction:
             including_sections = [r for r in rest_sections if section in r]
             not_min_sections.extend(including_sections)
         return [s for s in sections if s and s not in not_min_sections]
+
+    def set_new_vertices_values(self, vertices_values: List[bool]) -> None:
+        if len(vertices_values) != len(self.vertices_values):
+            raise StructuralFunctionError(
+                "Mismatch of vertices between argument and graph of structural function"
+            )
+        self.vertices_values = vertices_values
+        self.min_paths_structural_function_value = (
+            self.calculate_structural_function_min_paths()
+        )
+        self.min_cuts_structural_function_value = (
+            self.calculate_structural_function_min_cuts()
+        )
 
     def calculate_structural_function_value_for_serial(
         self, structural_elements: List[int]
