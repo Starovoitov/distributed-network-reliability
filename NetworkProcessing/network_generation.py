@@ -52,6 +52,9 @@ class Graph:
         if is_simple:
             self.graph_object.simplify()
 
+    def __str__(self):
+        return self.adjacency_matrix
+
     @property
     def edges(self) -> List[Tuple[int, int]]:
         return self.graph_object.get_edgelist()

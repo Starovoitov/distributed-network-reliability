@@ -1,7 +1,7 @@
 import collections
 from typing import List, Tuple
 
-from network_generation import Graph
+from NetworkProcessing.network_generation import Graph
 from utils import multiple_values_in_list, get_random_struct_values
 
 
@@ -23,6 +23,12 @@ class StructuralFunction:
         )
         self.min_cuts_structural_function_value = (
             self.calculate_structural_function_min_cuts()
+        )
+
+    def __str__(self):
+        return (
+            f"Min paths collected: {self.min_workable_paths}\n"
+            f"Min cuts collected: {self.min_non_workable_cuts}"
         )
 
     def get_all_min_workable_paths(self) -> List[List[int]]:
