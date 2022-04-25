@@ -12,5 +12,5 @@ async def index(request):
     s = StructuralFunction(g)
     controller = DbController()
     controller.add_graph(g)
-    controller.show_all_graphs()
+    controller.get_all_graphs()
     return web.Response(text=str(s))

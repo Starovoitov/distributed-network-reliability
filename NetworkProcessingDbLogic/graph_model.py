@@ -15,4 +15,4 @@ class Graph(DeclarativeBase):
     graph_ml = Column("GraphML", Text)
 
     def __repr__(self):
-        return f"{self.id}"
+        return f"Graph id: {self.id}"

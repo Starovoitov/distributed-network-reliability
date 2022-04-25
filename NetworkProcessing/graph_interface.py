@@ -29,5 +29,5 @@ class GraphInterface:
         self.save_graph(temp_filename)
         with open(temp_filename) as f:
             graphml = f.read()
-        os.rmdir(temp_filename)
+        os.remove(temp_filename)
         return graphml
