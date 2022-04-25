@@ -22,6 +22,6 @@ class FailuresGenerator:
         self.distribution = self.all_distributions[distribution]
 
     def conduct_test(self) -> np.array:
-        return np.random.rand(self.trials) < np.random.exponential(
+        return np.random.rand(self.trials) < self.distribution(
             1.0 / self.intensity, size=self.trials
         )
