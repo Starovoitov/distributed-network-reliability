@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from NetworkProcessing.network_generation import Graph
+from NetworkProcessing.graphs import Graph
 from NetworkProcessingDbLogic.graph_model import DeclarativeBase, Graph as GraphModel
 
 
@@ -21,16 +21,12 @@ class DbController:
         self.session = Session()
 
     def add_graph(self, graph_object: Graph):
-        graph_object.save_graph("temp")
-        with open("temp") as f:
-            graphml = f.read()
-
         graph = GraphModel(
             initial_vertex_index=graph_object.initial_vertex_index,
             final_vertex_index=graph_object.final_vertex_index,
             is_directed=graph_object.is_directed,
             is_simple=graph_object.is_simple,
-            graph_ml=graphml,
+            graph_ml=graph_object.get_graphml(),
         )
         self.session.add(graph)
         self.session.commit()

@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from NetworkProcessing.network_generation import ConnectedGraph
+from NetworkProcessing.graphs import ConnectedGraph
 from NetworkProcessing.structural_function import StructuralFunction
 from NetworkProcessingDbLogic.db_controller import DbController
 

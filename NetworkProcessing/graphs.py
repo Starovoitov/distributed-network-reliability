@@ -3,14 +3,11 @@ from typing import Tuple, List, Dict
 
 import igraph
 import pandas as pd
-from igraph import plot
+
+from NetworkProcessing.graph_interface import GraphInterface, GraphException
 
 
-class GraphException(igraph.InternalError):
-    pass
-
-
-class Graph:
+class Graph(GraphInterface):
     def __init__(
         self,
         vertices: int = None,
@@ -21,6 +18,7 @@ class Graph:
         is_simple=True,
         filename: str = None,
     ):
+        super(GraphInterface).__init__()
         self.initial_vertex_index = initial_vertex_index
         self.final_vertex_index = final_vertex_index
         self.graph_object = igraph.Graph()
@@ -94,10 +92,6 @@ class Graph:
         self.graph_object.add_vertices(self.vertices)
         self._generate_random_edges(self.edges_number)
 
-    def plot_graph(self) -> None:
-        self.graph_object.vs["label"] = self.graph_object.vs.indices
-        plot(self.graph_object, margin=(30, 30, 30, 30))
-
     def set_edge_weights(self) -> None:
         self.edge_weights = [{e: random.random()} for e in self.edges]
 
@@ -144,12 +138,6 @@ class Graph:
         for node in set(self.graph_object.neighbors(start_vertex)) - set(cursor_path):
             all_paths.extend(self.find_all_paths(node, end_vertex, cursor_path))
         return all_paths
-
-    def load_graph(self, filename: str) -> igraph.Graph:
-        return self.graph_object.Read_GraphML(filename)
-
-    def save_graph(self, filename: str) -> None:
-        self.graph_object.write_graphml(filename)
 
 
 class ConnectedGraph(Graph):

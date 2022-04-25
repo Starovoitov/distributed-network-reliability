@@ -1,7 +1,7 @@
 import collections
 from typing import List, Tuple
 
-from NetworkProcessing.network_generation import Graph
+from NetworkProcessing.graphs import Graph
 from utils import multiple_values_in_list, get_random_struct_values
 
 
