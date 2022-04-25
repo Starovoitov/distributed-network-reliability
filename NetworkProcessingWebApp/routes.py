@@ -1,4 +1,4 @@
-from GraphProcessing.views import index
+from NetworkProcessingWebApp.views import index
 
 
 def setup_routes(app):

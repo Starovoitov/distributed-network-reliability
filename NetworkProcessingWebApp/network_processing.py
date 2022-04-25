@@ -1,6 +1,6 @@
 from aiohttp import web
 
-from GraphProcessing.routes import setup_routes
+from NetworkProcessingWebApp.routes import setup_routes
 
 app = web.Application()
 setup_routes(app)
