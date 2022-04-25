@@ -77,6 +77,14 @@ class Graph:
             for v, inc in enumerate(incidence_list)
         }
 
+    @property
+    def is_directed(self):
+        return self.graph_object.is_directed()
+
+    @property
+    def is_simple(self):
+        return self.graph_object.is_simple()
+
     def get_edge_weights(self, edge: Tuple[int, int]) -> List[float]:
         return [e[edge] for e in self.edge_weights if edge in e]
 
