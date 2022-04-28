@@ -1,0 +1,17 @@
+version: '0.99'
+
+services:
+  postgres:
+      image: postgres:10
+      volumes:
+      - "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
+      - "dbdata:/var/lib/postgresql/data"
+      environment:
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=test
+          - POSTGRES_DB=networks
+      ports:
+      - 5432:5432
+
+volumes:
+  networks:
