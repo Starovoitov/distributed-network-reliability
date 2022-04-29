@@ -1,73 +1,79 @@
-from typing import List
+import argparse
+import os
+import pathlib
 
-from sqlalchemy import create_engine, select, delete
+import trafaret as t
+from aiohttp import web
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from trafaret_config import commandline
 
-from NetworkProcessing.graphs import Graph
 from NetworkProcessingDbLogic.graph_model import DeclarativeBase
-from NetworkProcessingDbLogic.graph_model import Graph as GraphModelObject
 
 
 class DbController:
-    USER = "postgres"
-    PASSWORD = "test"
-    HOST = "LOCALHOST"
-    PORT = 5432
-    DB = "networks"
+    BASE_DIR = pathlib.Path(__file__).parent
+    DEFAULT_CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 
-    def __init__(self):
-        self.engine = create_engine(
-            f"postgresql+psycopg2://{self.USER}:{self.PASSWORD}@{self.HOST}:{self.PORT}/{self.DB}"
+    TRAFARET = t.Dict(
+        {
+            t.Key("postgres"): t.Dict(
+                {
+                    "database": t.String(),
+                    "user": t.String(),
+                    "password": t.String(),
+                    "host": t.String(),
+                    "port": t.Int(),
+                }
+            )
+        }
+    )
+
+    def __init__(self, app: web.Application, argv=None):
+        self.engine = None
+        self.session = None
+        app["config"] = self.get_config(argv)
+
+    def __getattr__(self, name):
+        return getattr(self.session, name)
+
+    async def create_metadata(self):
+        async with self.engine.begin() as conn:
+            await conn.run_sync(DeclarativeBase.metadata.create_all)
+
+    def get_config(self, argv=None) -> dict:
+        ap = argparse.ArgumentParser()
+        commandline.standard_argparse_options(
+            ap, default_config=self.DEFAULT_CONFIG_PATH
         )
-        DeclarativeBase.metadata.create_all(self.engine)
-        self.session = sessionmaker(bind=self.engine)
+        # ignore unknown options
+        options, unknown = ap.parse_known_args(argv)
+        config = commandline.config_from_options(options, self.TRAFARET)
+        return config
 
-    def add_graph(self, graph_object: Graph) -> None:
-        with self.session.begin() as session:
-            graph = GraphModelObject(
-                initial_vertex_index=graph_object.initial_vertex_index,
-                final_vertex_index=graph_object.final_vertex_index,
-                is_directed=graph_object.is_directed,
-                is_simple=graph_object.is_simple,
-                graph_ml=graph_object.get_graphml(),
-            )
-            session.add(graph)
-            session.commit()
+    async def init_database(self, app) -> None:
+        """
+        This is signal for success creating connection with database
+        """
+        config = app["config"]["postgres"]
+        connection_url = "postgresql+asyncpg://{user}:{password}@{host}:{port}/{database}".format(
+            **config
+        )
+        self.engine = create_async_engine(connection_url)
+        await self.create_metadata()
+        self.session = sessionmaker(
+            self.engine, expire_on_commit=False, class_=AsyncSession
+        )()
+        app["db"] = self.engine
 
-    def get_all_graphs(self) -> List[GraphModelObject]:
-        with self.session.begin() as session:
-            graphs = session.query(GraphModelObject).all()
-        return graphs
+    async def close_database(self, app) -> None:
+        """
+        This is signal for success closing connection with database before shutdown
+        """
+        app["db"].close()
+        await app["db"].wait_closed()
 
-    def get_graph_by_id(self, graph_id: int) -> GraphModelObject:
-        with self.session.begin() as session:
-            graph = (
-                session.execute(select(GraphModelObject).filter_by(id=graph_id))
-                .scalars()
-                .first()
-            )
-        return graph
-
-    def count_stored_graphs(self) -> int:
-        with self.session.begin() as session:
-            graph_count = session.query(GraphModelObject).count()
-        return graph_count
-
-    def delete_all_graphs(self) -> None:
-        with self.session.begin() as session:
-            session.query(GraphModelObject).delete()
-            session.commit()
-
-    def delete_graph_by_id(self, graph_id: int) -> None:
-        with self.session.begin() as session:
-            session.execute(
-                delete(GraphModelObject).where(GraphModelObject.id == graph_id)
-            )
-            session.commit()
-
-    def is_graph_exists(self, graph_id: int) -> bool:
-        with self.session.begin() as session:
-            is_exists = session.query(
-                session.query(GraphModelObject).filter_by(id=graph_id).exists()
-            ).scalar()
-        return is_exists
+    def init_app(self, app) -> web.Application:
+        app.on_startup.extend([self.init_database])
+        app.on_cleanup.extend([self.close_database])
+        return app
