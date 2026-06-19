@@ -1,4 +1,4 @@
-# networking_data_generation
+# distributed-network-reliability
 
 Tools for generating network graphs, computing structural reliability functions, and simulating node failures.
 
